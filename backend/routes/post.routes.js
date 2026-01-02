@@ -39,43 +39,55 @@ router.post(
   },
 );
 
-router.get(
-  '/getAllPost',
-  async (req, res) => {
-    try {
-      const posts = await Post.find()
-        .populate({
-          path: 'user',
-          select: 'firstName lastName',
-        })
-        .sort({ createdAt: -1 });
-      console.log('POPULATED POSTS:', posts);
-      res.status(200).json(posts);
-    } catch (error) {
-      res.status(500).json({ message: error.message });
-    }
-  },
-);
+router.get('/getAllPost', async (req, res) => {
+  try {
+    const posts = await Post.find()
+      .populate({
+        path: 'user',
+        select: 'firstName lastName',
+      })
+      .sort({ createdAt: -1 });
+    console.log('POPULATED POSTS:', posts);
+    res.status(200).json(posts);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
 // Get all posts by user
-router.get(
-  '/getPostByUser',
+router.get('/getPostByUser', authMiddleware, async (req, res) => {
+  try {
+    const posts = await Post.find({ user: req.user.id })
+      .populate({
+        path: 'user',
+        select: 'firstName lastName',
+      })
+      .sort({ createdAt: -1 });
+    console.log('POPULATED POSTS:', posts);
+    console.log('Logged in userId:', req.user.id);
 
-  async (req, res) => {
-    try {
-      const posts = await Post.find({ user: req.user.id })
-        .populate({
-          path: 'user',
-          select: 'firstName lastName',
-        })
-        .sort({ createdAt: -1 });
-      console.log('POPULATED POSTS:', posts);
-      console.log('Logged in userId:', req.user.id);
+    res.status(200).json(posts);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
-      res.status(200).json(posts);
-    } catch (error) {
-      res.status(500).json({ message: error.message });
+// delete post by id
+router.delete('/deletePost/:postId',
+  async (req, res) =>{
+    try{
+      const {postId} = req.params;
+
+      const post = await Post.findById(postId);
+      if(!post){
+        return res.status(404).json({message: 'Post not found'});
+      }
+      await Post.findByIdAndDelete(postId);
+      res.status(200).json({message: 'Post deleted successfully'});
+    }catch(error){
+      res.status(500).json({ message: error.message }); 
     }
-  },
-);
+  }
+)
+
 module.exports = router;

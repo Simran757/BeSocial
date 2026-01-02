@@ -18,27 +18,30 @@ const CreatePost = () => {
   const navigation = useNavigation();
   const [text, setText] = useState('');
   const [image, setImage] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const openGallery = async () => {
     const result = await launchImageLibrary({
       mediaType: 'photo',
       quality: 0.8,
     });
-    if (result.didCancel) return;
-    setImage(result.assets[0]);
+    if (result.didCancel) {
+      setImage(result.assets[0]);
+    }
   };
   const handleSubmit = async () => {
     if (!text.trim()) {
       console.log('Text is required');
       return;
     }
-
+    if (loading) return;
+    setLoading(true);
     const token = await AsyncStorage.getItem('token');
     const formData = new FormData();
-    formData.append('text',text);
-    if(image) {
-      formData.append('image',{
-        uri:  image.uri,
+    formData.append('text', text);
+    if (image) {
+      formData.append('image', {
+        uri: image.uri,
         type: image.type,
         name: image.fileName,
       });
@@ -65,12 +68,16 @@ const CreatePost = () => {
       const data = await res.json();
       console.log('posted data: ', data);
       if (res.ok) {
+        navigation.navigate('ProfileScreen', {
+          newPost: data.post,
+        });
         setText('');
         setImage(null);
-        navigation.goBack();
       }
     } catch (error) {
       console.log('Error in creating post: ', error);
+    } finally {
+      setLoading(false);
     }
   };
   return (
@@ -96,8 +103,10 @@ const CreatePost = () => {
           />
         </ScrollView>
         {image && (
-          <Image source={{uri:image.uri}}
-          style= {{width:'100%',height:200, marginTop: 10}} />
+          <Image
+            source={{ uri: image.uri }}
+            style={{ width: '100%', height: 200, marginTop: 10 }}
+          />
         )}
         <View style={createPost.imageContainer}>
           <TouchableOpacity onPress={openGallery}>

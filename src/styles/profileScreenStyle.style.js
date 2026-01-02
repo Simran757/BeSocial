@@ -30,6 +30,9 @@ const profileScreenStyle = StyleSheet.create({
     profileText:{
         padding:10,
     },
+    postsContainer:{
+        paddingBottom:1000,
+    },
 });
 
 export default profileScreenStyle;

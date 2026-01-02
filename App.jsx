@@ -9,6 +9,9 @@ import MainNavigator from './src/navigations/MainNavigator';
 import SettingScreen from './src/screens/SettingScreen';
 import CreatePost from './src/screens/CreatePost';
 import ForgetPassword from './src/screens/ForgetPassword';
+import EditProfilePage from './src/screens/EditProfilePage';
+import About from './src/screens/About';
+import ProfileScreen from './src/screens/ProfileScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -24,6 +27,10 @@ const App = () => {
         <Stack.Screen name= "Settings" component={SettingScreen} />
         <Stack.Screen name= "CreatePost" component={CreatePost} />
         <Stack.Screen name= "ForgetPassword" component={ForgetPassword} />
+        <Stack.Screen name= "EditProfilePage" component={EditProfilePage} />
+        <Stack.Screen name= "About" component={About} />  
+        <Stack.Screen name= "EditPostPage" component={EditProfilePage} />
+        <Stack.Screen name= "ProfileScreen" component={ProfileScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   </SafeAreaProvider>

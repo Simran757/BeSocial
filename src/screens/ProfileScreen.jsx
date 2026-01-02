@@ -23,6 +23,9 @@ const ProfileScreen = () => {
   const [myPosts, setMyPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const handlePostDelete = postId => {
+    setMyPosts(prevPost => prevPost.filter(post => post._id !== postId));
+  };
   // Load user name from token
   useEffect(() => {
     const loadUserData = async () => {
@@ -48,13 +51,16 @@ const ProfileScreen = () => {
     try {
       const token = await AsyncStorage.getItem('token');
 
-      const res = await fetch('http://192.168.2.105:5000/api/post/my-posts', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+      const res = await fetch(
+        'http://192.168.2.105:5000/api/post/getPostByUser',
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
 
       const data = await res.json();
       setMyPosts(data);
@@ -67,8 +73,10 @@ const ProfileScreen = () => {
 
   const renderPost = ({ item }) => (
     <PostCardOnUser
+      postId={item._id}
       text={item.text}
       image={item.image}
+      onPostDelete={handlePostDelete}
       likeCount={item.activity?.likeCount}
       commentCount={item.activity?.commentCount}
       shareCount={item.activity?.shareCount}
@@ -78,6 +86,7 @@ const ProfileScreen = () => {
 
   return (
     <View style={home.container}>
+      {/* Profile Header */}
       <Header />
 
       <Text style={home.mainText}>User Profile</Text>
@@ -86,7 +95,6 @@ const ProfileScreen = () => {
         <View style={messageScreen.line} />
       </View>
 
-      {/* Profile Header */}
       <View style={profileScreenStyle.mainContainer}>
         <View style={profileScreenStyle.profileContainer}>
           <View style={profileScreenStyle.profileIcon}>
@@ -96,6 +104,9 @@ const ProfileScreen = () => {
           <View style={profileScreenStyle.profileText}>
             <Text style={profileScreenStyle.userNameContainer}>{userName}</Text>
             <Text style={profileScreenStyle.description}>Bio</Text>
+            <Text style={profileScreenStyle.description}>
+              Total Posts: {myPosts.length}
+            </Text>
           </View>
         </View>
 
@@ -103,21 +114,19 @@ const ProfileScreen = () => {
           <FontAwesomeIcon icon={faPlus} size="25" />
         </TouchableOpacity>
       </View>
-
       {/* User Posts */}
-      {loading ? (
-        <ActivityIndicator size="large" style={{ marginTop: 20 }} />
-      ) : (
-        <FlatList
-          data={myPosts}
-          renderItem={renderPost}
-          keyExtractor={item => item._id.toString()}
-          showsVerticalScrollIndicator={false}
-        />
-      )}
-      <Text style={{ textAlign: 'center', marginVertical: 10 }}>
-        My Posts Count: {myPosts.length}
-      </Text>
+      <View style={profileScreenStyle.postsContainer}>
+        {loading ? (
+          <ActivityIndicator size="large" style={{ marginTop: 20 }} />
+        ) : (
+          <FlatList
+            data={myPosts}
+            renderItem={renderPost}
+            keyExtractor={item => item._id.toString()}
+            showsVerticalScrollIndicator={false}
+          />
+        )}
+      </View>
     </View>
   );
 };

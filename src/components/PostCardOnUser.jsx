@@ -1,5 +1,13 @@
-import { Text, View, Image, TouchableOpacity } from 'react-native';
-import React from 'react';
+import {
+  Text,
+  View,
+  Image,
+  TouchableOpacity,
+  findNodeHandle,
+  UIManager,
+} from 'react-native';
+import React, { useState, useRef } from 'react';
+import MenuPopup from '../components/MenuPopup';
 import postCardStyle from '../styles/postCardStyle.style';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import {
@@ -7,16 +15,31 @@ import {
   faPaperPlane,
   faComment,
   faHeart,
+  faEllipsisV,
 } from '@fortawesome/free-solid-svg-icons';
 
 const PostCardOnUser = ({
+  postId,
   text,
   image,
   likeCount,
   shareCount,
   commentCount,
+  onPostDelete,
   userName,
 }) => {
+  const dotIconRef = useRef(null);
+  const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
+  const [menuVisible, setMenuVisible] = useState(false);
+  const openMenu = () => {
+    const handle = findNodeHandle(dotIconRef.current);
+
+    UIManager.measure(handle, (x, y, width, height, pageX, pageY) => {
+      // You can use pageX and pageY to position your menu if needed
+      setMenuPosition({ x: pageX, y: pageY + height });
+      setMenuVisible(true);
+    });
+  };
   return (
     // Outer card
     <View style={postCardStyle.container}>
@@ -30,7 +53,22 @@ const PostCardOnUser = ({
           </Text>
           <Text style={postCardStyle.description}>bio</Text>
         </View>
+        <TouchableOpacity
+          style={postCardStyle.dotIcon}
+          ref={dotIconRef}
+          onPress={openMenu}
+        >
+          <FontAwesomeIcon icon={faEllipsisV} size={23} />
+        </TouchableOpacity>
       </View>
+      <MenuPopup
+        visible={menuVisible}
+        position={menuPosition}
+        onPostDelete={onPostDelete}
+        onClose={() => setMenuVisible(false)}
+        postId={postId}
+      />
+      {/* Post content section */}
       <View>
         {/* Post Image */}
         {image && (
