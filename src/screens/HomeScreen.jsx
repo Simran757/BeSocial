@@ -11,7 +11,7 @@ import home from '../styles/home.style';
 import PostCard from '../components/PostCard';
 import messageScreen from '../styles/messageScreen.style';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
-
+import api from '../api/axios';
 const HomeScreen = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,13 +22,12 @@ const HomeScreen = () => {
   }, []);
   const fetchAllPost = async () => {
     try {
-      const res = await fetch('http://192.168.2.105:5000/api/post/getAllPost', {
-        method: 'GET',
+      const res = await api.get('/api/post/getAllPost', {
         headers: { 'Content-Type': 'application/json' },
       });
-      const data = await res.json();
-      console.log('response from api ', data);
-      setPosts(data);
+ 
+      console.log('response from api ', res.data);
+      setPosts(res.data.posts || []);
     } catch (error) {
       console.log('Error in showing posts: ', error);
     } finally {
@@ -66,7 +65,7 @@ const HomeScreen = () => {
           data={posts}
           renderItem={renderPost}
           keyExtractor={item => item._id.toString()}
-          showVerticalScrollIndicator={false}
+          showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: tabBarHeight }}
         />
       </View>

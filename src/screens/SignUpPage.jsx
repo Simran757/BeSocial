@@ -35,7 +35,7 @@ const SignUpPage = () => {
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) return;
     try {
-      const res = await fetch('http://192.168.2.105:5000/api/auth/signup', {
+      const res = await fetch('http://192.168.2.103:5000/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

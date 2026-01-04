@@ -11,7 +11,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import usePasswordToggle from '../hooks/usePasswordToggle';
 import { validateSignup } from '../commonService/authValidation.service';
-
+import api from '../api/axios';
 const ForgetPassword = () => {
   const passwordToggle = usePasswordToggle();
   const confirmPasswordToggle = usePasswordToggle();
@@ -30,23 +30,21 @@ const ForgetPassword = () => {
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) return;
     try {
-      const res = await fetch(
-        'http://192.168.2.105:5000/api/auth/forget-password',
+      const res = await api.post(
+        '/api/auth/forget-password',
         {
-          method: 'POST',
+          email,
+          newPassword,
+        },
+        {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            email,
-            newPassword,
-          }),
         },
       );
       console.log('api hit');
-      const data = await res.json();
-      console.log('data:', data);
-      if (res.ok) {
+      console.log('data:', res.data);
+      if (res.status === 200 || res.status === 201 ) {
         navigation.navigate('Login');
       }
     } catch (error) {

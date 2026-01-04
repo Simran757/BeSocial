@@ -13,7 +13,7 @@ import { faArrowCircleLeft, faImage } from '@fortawesome/free-solid-svg-icons';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { launchImageLibrary } from 'react-native-image-picker';
-
+import api from '../api/axios';
 const CreatePost = () => {
   const navigation = useNavigation();
   const [text, setText] = useState('');
@@ -25,7 +25,7 @@ const CreatePost = () => {
       mediaType: 'photo',
       quality: 0.8,
     });
-    if (result.didCancel) {
+    if (!result.didCancel && result.assets && result.assets.length > 0) {
       setImage(result.assets[0]);
     }
   };
@@ -50,29 +50,18 @@ const CreatePost = () => {
       console.log('post button clicked');
       console.log('TOKEN:', token);
       console.log('FORM DATA:', formData);
-      const res = await fetch('http://192.168.2.105:5000/api/post/createPost', {
-        method: 'POST',
+      const res = await api.post('/api/post/createPost', formData, {
         headers: {
-          // 'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
         },
-        body: formData,
       });
       console.log('create post api hit');
-      if (!res.ok) {
-        const errText = await res.text();
-        console.log('Server error:', errText);
-        return;
-      }
-      console.log('Status', res.status);
-      const data = await res.json();
-      console.log('posted data: ', data);
-      if (res.ok) {
-        navigation.navigate('ProfileScreen', {
-          newPost: data.post,
-        });
+      console.log('Response data:', res.data);
+      if (res.status === 201) {
         setText('');
         setImage(null);
+        navigation.goBack();
       }
     } catch (error) {
       console.log('Error in creating post: ', error);

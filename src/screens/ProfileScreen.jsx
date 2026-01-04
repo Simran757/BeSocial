@@ -51,19 +51,13 @@ const ProfileScreen = () => {
     try {
       const token = await AsyncStorage.getItem('token');
 
-      const res = await fetch(
-        'http://192.168.2.105:5000/api/post/getPostByUser',
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
+      const res = await api.get('/api/post/getPostByUser', {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
-      );
-
-      const data = await res.json();
-      setMyPosts(data);
+      });
+      setMyPosts(res.data);
     } catch (error) {
       console.log('Error fetching user posts:', error);
     } finally {

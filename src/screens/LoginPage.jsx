@@ -9,6 +9,7 @@ import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { AUTH_SUCCESS } from '../commonService/authMessages.service';
 import { AUTH_FAILURE } from '../commonService/authMessages.service';
 import usePasswordToggle from '../hooks/usePasswordToggle';
+import api from '../api/axios';
 
 const LoginPage = () => {
   const passwordToggle = usePasswordToggle();
@@ -24,12 +25,12 @@ const LoginPage = () => {
 
   useEffect(() => {
     if (attemptCount >= MAX_ATTEMPTS) {
-      navigation.navigate('ForgetPassword');
+      navigation.replace('ForgetPassword');
     }
-  }, [attemptCount]);
+  }, [attemptCount, navigation]);
 
   const handleLogin = async () => {
-    if(loading) return;
+    if (loading) return;
     if (!email || !password) {
       Alert.alert('Error', 'Please fill all fields');
       return;
@@ -37,34 +38,38 @@ const LoginPage = () => {
 
     try {
       setLoading(true);
-      const res = await fetch('http://192.168.2.105:5000/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
+      const res = await api.post(
+        '/api/auth/login',
+        {
+          email,
+          password,
+        },
+        {
+          headers: { 'Content-Type': 'application/json' },
+        },
+      );
 
-      const data = await res.json();
       console.log('attemp count = ', attemptCount);
 
-      if (res.ok) {
-        // save token
-        await AsyncStorage.setItem('token', data.token);
-        console.log('login data: ', data);
-        setShowSuccess(true);
-        setAttemptCount(0);
-        setTimeout(() => {
-          setShowSuccess(false);
-          navigation.replace('Main');
-        }, 1000);
-      } else {
-        setShowErrors(true);
-        setAttemptCount(prev => prev + 1);
-        setTimeout(() => {
-          setShowErrors(false);
-        }, 4000);
-      }
+      // save token
+      await AsyncStorage.setItem('token', res.data.token);
+      console.log('login data: ', res.data);
+      setShowSuccess(true);
+      setAttemptCount(0);
+      setTimeout(() => {
+        setShowSuccess(false);
+        navigation.replace('Main');
+      }, 1000);
     } catch (error) {
-      Alert.alert('Network error', 'Unable to connect to server');
+      setShowErrors(true);
+      setAttemptCount(prev => prev + 1);
+      setTimeout(() => {
+        setShowErrors(false);
+      }, 4000);
+      Alert.alert('Login Failed', AUTH_FAILURE.LOGIN);
+      setTimeout(() => {
+        setShowErrors(false);
+      }, 4000);
     } finally {
       setLoading(false);
     }
