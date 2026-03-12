@@ -16,10 +16,12 @@ import { jwtDecode } from 'jwt-decode';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import PostCardOnUser from '../components/PostCardOnUser';
+import api from '../api/axios';
 
 const ProfileScreen = () => {
   const navigation = useNavigation();
   const [userName, setUserName] = useState('');
+  const [displayUsername, setDisplayUsername] = useState('');
   const [myPosts, setMyPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -36,6 +38,7 @@ const ProfileScreen = () => {
           const decoded = jwtDecode(token);
           const fullName = `${decoded.firstName} ${decoded.lastName}`;
           setUserName(fullName);
+          setDisplayUsername(`@${decoded.username}`);
         }
       } catch (error) {
         console.error('Failed to load user data', error);
@@ -92,11 +95,14 @@ const ProfileScreen = () => {
       <View style={profileScreenStyle.mainContainer}>
         <View style={profileScreenStyle.profileContainer}>
           <View style={profileScreenStyle.profileIcon}>
-            <FontAwesomeIcon icon={faCircleUser} size="60" />
+            <FontAwesomeIcon icon={faCircleUser} size={60} />
           </View>
 
           <View style={profileScreenStyle.profileText}>
             <Text style={profileScreenStyle.userNameContainer}>{userName}</Text>
+            <Text style={[profileScreenStyle.description, profileScreenStyle.displayUsername]}>
+              {displayUsername}
+            </Text>
             <Text style={profileScreenStyle.description}>Bio</Text>
             <Text style={profileScreenStyle.description}>
               Total Posts: {myPosts.length}
@@ -105,13 +111,13 @@ const ProfileScreen = () => {
         </View>
 
         <TouchableOpacity onPress={() => navigation.navigate('CreatePost')}>
-          <FontAwesomeIcon icon={faPlus} size="25" />
+          <FontAwesomeIcon icon={faPlus} size={25} />
         </TouchableOpacity>
       </View>
       {/* User Posts */}
       <View style={profileScreenStyle.postsContainer}>
         {loading ? (
-          <ActivityIndicator size="large" style={{ marginTop: 20 }} />
+          <ActivityIndicator size="large" style={profileScreenStyle.loadingIndicator} />
         ) : (
           <FlatList
             data={myPosts}

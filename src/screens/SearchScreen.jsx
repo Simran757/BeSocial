@@ -1,4 +1,4 @@
-import { ActivityIndicator, FlatList, TextInput, View } from 'react-native';
+import { ActivityIndicator, FlatList, Text, TextInput, View } from 'react-native';
 import Header from '../components/Header';
 import home from '../styles/home.style';
 import search from '../styles/search.style';
@@ -10,31 +10,31 @@ const SearchScreen = () => {
   const [query, setQuery] = useState('');
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
-  React.useEffect(() => {
-    if (query.trim().length === 0) {
-      setUsers([]);
-      return;
-    }
-    const delay = setTimeout(() => {
-      searchUsers();
-    }, 500);
-    return () => clearTimeout(delay);
-  }, [query]);
-  const searchUsers = async () => {
-    try {
-      setLoading(true);
-      const res = await api.get(
-        `/api/users/search?q=${query}`,
-      );
-      if (res.status === 200) {
-        setUsers(res.data.users);
-      }
-    } catch (error) {
-      console.error('Search error:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // React.useEffect(() => {
+  //   if (query.trim().length === 0) {
+  //     setUsers([]);
+  //     return;
+  //   }
+  //   const delay = setTimeout(() => {
+  //     searchUsers();
+  //   }, 500);
+  //   return () => clearTimeout(delay);
+  // }, [query]);
+  // const searchUsers = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const res = await api.get(
+  //       `/api/users/search?q=${query}`,
+  //     );
+  //     if (res.status === 200) {
+  //       setUsers(res.data.users);
+  //     }
+  //   } catch (error) {
+  //     console.error('Search error:', error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   return (
     <View style={home.container}>

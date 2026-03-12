@@ -35,10 +35,10 @@ const forgetPassword = StyleSheet.create({
     alignItems:"center",
     fontSize:16,
   },
-  iconContainer:{
-    margin:5,
-    padding:5,
-  }
+  inputBoxNested: {
+    flex: 1,
+    borderWidth: 0,
+  },
 });
 
 export default forgetPassword;

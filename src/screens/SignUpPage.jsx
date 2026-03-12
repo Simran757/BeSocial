@@ -9,6 +9,7 @@ import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { validateSignup } from '../commonService/authValidation.service';
 import { AUTH_SUCCESS } from '../commonService/authMessages.service';
 import usePasswordToggle from '../hooks/usePasswordToggle';
+import api from '../api/axios';
 
 const SignUpPage = () => {
   const passwordToggle = usePasswordToggle();
@@ -17,6 +18,7 @@ const SignUpPage = () => {
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -28,6 +30,7 @@ const SignUpPage = () => {
     const validationErrors = validateSignup({
       firstName,
       lastName,
+      username,
       email,
       password,
       confirmPassword,
@@ -35,24 +38,20 @@ const SignUpPage = () => {
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) return;
     try {
-      const res = await fetch('http://192.168.2.103:5000/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          firstName,
-          lastName,
-          email,
-          password,
-          confirmPassword,
-        }),
+      const res = await api.post('/api/auth/signup', {
+        firstName,
+        lastName,
+        username,
+        email,
+        password,
+        confirmPassword,
       });
 
       console.log('Status:', res.status);
-
-      const data = await res.json();
+      const data = res.data;
       console.log('Response:', data);
 
-      if (res.ok) {
+      if (res.status === 201 || res.status === 200) {
         await AsyncStorage.setItem('token', data.token);
         setShowSuccess(true);
         setTimeout(() => {
@@ -60,16 +59,16 @@ const SignUpPage = () => {
           navigation.replace('Login');
         }, 2000);
       } else {
-        alert(data.message);
+        // alert(data.message);
       }
     } catch (error) {
       console.log('Signup error:', error);
-      alert('Network error');
+      alert('Network error - Please check if backend is running');
     }
   };
 
   const isFormFilled =
-    firstName && lastName && email && password && confirmPassword;
+    firstName && lastName && username && email && password && confirmPassword;
 
   return (
     <SafeAreaView style={authStyles.container}>
@@ -98,6 +97,17 @@ const SignUpPage = () => {
 
         <TextInput
           style={authStyles.input}
+          placeholder="Username"
+          autoCapitalize="none"
+          value={username}
+          onChangeText={setUsername}
+        />
+        {errors.username && (
+          <Text style={authStyles.error}>{errors.username}</Text>
+        )}
+
+        <TextInput
+          style={authStyles.input}
           placeholder="Email"
           keyboardType="email-address"
           autoCapitalize="none"
@@ -105,9 +115,10 @@ const SignUpPage = () => {
           onChangeText={setEmail}
         />
         {errors.email && <Text style={authStyles.error}>{errors.email}</Text>}
+        
         <View style={authStyles.passwordContainer}>
           <TextInput
-            style={[authStyles.input, { flex: 1, borderWidth: 0 }]}
+            style={[authStyles.input, authStyles.passwordInput]}
             placeholder="Password"
             secureTextEntry={passwordToggle.secure}
             autoCapitalize="none"
@@ -117,7 +128,7 @@ const SignUpPage = () => {
           <TouchableOpacity onPress={passwordToggle.toggle}>
             <FontAwesomeIcon
               icon={passwordToggle.secure ? faEyeSlash : faEye}
-              size="20"
+              size={20}
               color="grey"
             />
           </TouchableOpacity>
@@ -125,9 +136,10 @@ const SignUpPage = () => {
         {errors.password && (
           <Text style={authStyles.error}>{errors.password}</Text>
         )}
+
         <View style={authStyles.passwordContainer}>
           <TextInput
-            style={[authStyles.input, { flex: 1, borderWidth: 0 }]}
+            style={[authStyles.input, authStyles.passwordInput]}
             placeholder="Confirm Password"
             secureTextEntry={confirmPasswordToggle.secure}
             autoCapitalize="none"
@@ -137,7 +149,7 @@ const SignUpPage = () => {
           <TouchableOpacity onPress={confirmPasswordToggle.toggle}>
             <FontAwesomeIcon
               icon={confirmPasswordToggle.secure ? faEyeSlash : faEye}
-              size="20"
+              size={20}
               color="grey"
             />
           </TouchableOpacity>

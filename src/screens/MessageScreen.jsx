@@ -1,53 +1,292 @@
-import { FlatList, Text, View } from 'react-native'
-import React from 'react';
-import messageScreen from "../styles/messageScreen.style";
-import Header from '../components/Header'
-import MessageCard from "../components/MessageCard";
-import home from "../styles/home.style";
-const messageData = [
-  { id: 1, userName: "Simran Kashyap", messageText: "How are you?" },
-  { id: 2, userName: "Shivam Bharti", messageText: "Hey! Long time no see." },
-  { id: 3, userName: "Aditi Sharma", messageText: "Did you check the new update?" },
-  { id: 4, userName: "Rahul Verma", messageText: "Let's catch up this weekend." },
-  { id: 5, userName: "Neha Singh", messageText: "I just finished my task." },
-  { id: 6, userName: "Aman Gupta", messageText: "Can you review my code?" },
-  { id: 7, userName: "Pooja Mehta", messageText: "Meeting is at 3 PM today." },
-  { id: 8, userName: "Rohit Kumar", messageText: "Server is running fine now." },
-  { id: 9, userName: "Kriti Malhotra", messageText: "Loved the new UI design!" },
-  { id: 10, userName: "Vikas Yadav", messageText: "Bug fixed and pushed to repo." },
-  { id: 11, userName: "Sneha Patel", messageText: "Can we talk later?" },
-  { id: 12, userName: "Karan Singh", messageText: "Learning React Native is fun!" },
-  { id: 13, userName: "Anjali Roy", messageText: "Uploaded the video today 🎥" },
-  { id: 14, userName: "Mohit Jain", messageText: "Startup idea sounds promising." },
-  { id: 15, userName: "Riya Kapoor", messageText: "Writing a new blog post." },
-  { id: 16, userName: "Arjun Malhotra", messageText: "Let me know when you're free." },
-  { id: 17, userName: "Nisha Arora", messageText: "Good morning ☀️" },
-  { id: 18, userName: "Saurabh Mishra", messageText: "App performance improved a lot." },
-  { id: 19, userName: "Priya Nair", messageText: "Can you help me with this?" },
-  { id: 20, userName: "Rohan Mehta", messageText: "See you tomorrow!" },
-];
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  ActivityIndicator,
+  Image,
+} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { SamparkChat } from '../lib/sampark-chat/sampark-chat.esm.js';
+import api from '../api/axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { jwtDecode } from 'jwt-decode';
+import styles from '../styles/messageScreen.style';
+import Header from '../components/Header.jsx';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { faCircleUser } from '@fortawesome/free-solid-svg-icons';
 
 const MessageScreen = () => {
-  const renderMessage = ({item}) => (
-    <MessageCard
-    userName={item.userName}
-    messageText = {item.messageText}/>
-  );
-  return (
-    <View style = {home.container}>
-      <Header />
-      <Text style = {home.mainText}>Inbox</Text>
-      <View style={messageScreen.lineContainer}>
-        <View style={messageScreen.line}/>
+  const navigation = useNavigation();
+
+  const [chatType, setChatType] = useState('peer');
+  const [users, setUsers] = useState([]);
+  const [groups, setGroups] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState(null);
+  const [onlineUsers, setOnlineUsers] = useState(new Set());
+
+  // Get current user ID from token
+  useEffect(() => {
+    const loadCurrentUser = async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        if (token) {
+          const decoded = jwtDecode(token);
+          setCurrentUserId(decoded.userid || decoded.id || decoded._id);
+        }
+      } catch (e) {
+        console.log('Error decoding token:', e);
+      }
+    };
+    loadCurrentUser();
+  }, []);
+
+  // Online/Offline presence listener
+  useEffect(() => {
+    const listenerId = 'message-screen-presence-listener';
+
+    const fetchOnlineUsers = () => {
+      try {
+        const onlineUsersList = SamparkChat.getOnlineUsers();
+        setOnlineUsers(new Set(onlineUsersList));
+      } catch (err) {
+        console.log('Error fetching online users:', err);
+      }
+    };
+
+    SamparkChat.addUserListener(listenerId, {
+      onUserOnline: onlineUser => {
+        const userId = onlineUser.getUid ? onlineUser.getUid() : onlineUser.uid;
+        if (userId) {
+          setOnlineUsers(prev => {
+            const newSet = new Set(prev);
+            newSet.add(userId);
+            return newSet;
+          });
+        }
+      },
+      onUserOffline: offlineUser => {
+        const userId = offlineUser.getUid
+          ? offlineUser.getUid()
+          : offlineUser.uid;
+        if (userId) {
+          setOnlineUsers(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(userId);
+            return newSet;
+          });
+        }
+      },
+    });
+
+    fetchOnlineUsers();
+
+    return () => {
+      SamparkChat.removeUserListener(listenerId);
+    };
+  }, []);
+
+  // Fetch users and groups
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+
+      try {
+        if (chatType === 'peer') {
+          console.log('Loading peer chats user lists...');
+
+          // 1. Fetch users from SDK
+          const participants =
+            await SamparkChat.PeerChat.getapplictionuserlist();
+          console.log('Peer chats user lists:', participants);
+
+          // 2. Fetch app-registered users from backend
+          const token = await AsyncStorage.getItem('token');
+          const res = await api.get('/api/users/all', {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          const appUsers = res.data?.users || res.data || [];
+          console.log('App users:', appUsers);
+
+          // 3. Build a SET of SDK participant IDs
+          const sdkUserIds = new Set(participants.map(p => p.participant_id));
+
+          // 4. Filter: only show users registered in BOTH app AND SDK
+          //    Also exclude the current logged-in user
+          const filteredUsers = appUsers.filter(
+            user =>
+              sdkUserIds.has(user.userid) && user.userid !== currentUserId,
+          );
+
+          console.log('Filtered users (app + SDK):', filteredUsers);
+          setUsers(filteredUsers);
+        } else {
+          const rooms = await SamparkChat.GroupChat.getgroups();
+          setGroups(rooms || []);
+        }
+      } catch (e) {
+        console.log('Error loading chats:', e);
+
+        // Fallback: if app backend fails, use SDK users directly
+        if (chatType === 'peer') {
+          try {
+            const participants =
+              await SamparkChat.PeerChat.getapplictionuserlist();
+
+            // Map SDK participants to a usable format, excluding current user
+            const mappedUsers = (participants || [])
+              .filter(p => p.participant_id !== currentUserId)
+              .map(p => ({
+                _id: p._id || p.participant_id,
+                userid: p.participant_id,
+                name: p.name || p.participant_id,
+                avatar: p.avatar || null,
+              }));
+
+            setUsers(mappedUsers);
+          } catch (fallbackErr) {
+            console.log('Fallback also failed:', fallbackErr);
+          }
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [chatType, currentUserId]);
+
+  const openChat = item => {
+    if (chatType === 'peer') {
+      navigation.navigate('ChatScreen', {
+        type: 'peer',
+        userId: item.userid,
+        userName:
+          item.name || `${item.firstName || ''} ${item.lastName || ''}`.trim(),
+        userAvatar: item.avatar || null,
+      });
+    } else {
+      navigation.navigate('ChatScreen', {
+        type: 'group',
+        data: item,
+      });
+    }
+  };
+
+  const renderPeerItem = ({ item }) => {
+    const isOnline = onlineUsers.has(item.userid);
+    const displayName =
+      item.name ||
+      `${item.firstName || ''} ${item.lastName || ''}`.trim() ||
+      item.userid;
+
+    return (
+      <TouchableOpacity onPress={() => openChat(item)} style={styles.chatItem}>
+        <View style={styles.chatRow}>
+          {/* Avatar */}
+          <View style={styles.avatarContainer}>
+            {item.avatar ? (
+              <Image source={{ uri: item.avatar }} style={styles.avatar} />
+            ) : (
+              <FontAwesomeIcon icon={faCircleUser} size={42} color="#9ca3af" />
+            )}
+            {isOnline && <View style={styles.onlineDot} />}
+          </View>
+
+          {/* User info */}
+          <View style={styles.chatInfo}>
+            <Text style={styles.chatName}>{displayName}</Text>
+            <Text style={styles.chatUserId}>@{item.userid}</Text>
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderGroupItem = ({ item }) => (
+    <TouchableOpacity onPress={() => openChat(item)} style={styles.chatItem}>
+      <View style={styles.chatRow}>
+        <View style={styles.avatarContainer}>
+          <FontAwesomeIcon icon={faCircleUser} size={42} color="#9ca3af" />
+        </View>
+        <View style={styles.chatInfo}>
+          <Text style={styles.chatName}>{item.group_name || item.name}</Text>
+          <Text style={styles.chatUserId}>
+            {item.type === 'private'
+              ? '🔐 Private'
+              : item.type === 'password'
+              ? '🔒 Protected'
+              : '🌐 Public'}
+          </Text>
+        </View>
       </View>
-      <FlatList 
-      data={messageData}
-      renderItem={renderMessage}
-      keyExtractor={(item) => item.id.toString()}
-      showVerticalScrollIndicator={false}/>
+    </TouchableOpacity>
+  );
+
+  return (
+    <View style={styles.container}>
+      <Header />
+
+      {/* Tabs */}
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[styles.tabButton, chatType === 'peer' && styles.activeTab]}
+          onPress={() => setChatType('peer')}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              chatType === 'peer' && styles.activeTabText,
+            ]}
+          >
+            Peer
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.tabButton, chatType === 'group' && styles.activeTab]}
+          onPress={() => setChatType('group')}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              chatType === 'group' && styles.activeTabText,
+            ]}
+          >
+            Group
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* List */}
+      {loading ? (
+        <ActivityIndicator style={styles.loader} size="large" color="#3b82f6" />
+      ) : users.length === 0 && chatType === 'peer' ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>No users found</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={chatType === 'peer' ? users : groups}
+          keyExtractor={(item, index) =>
+            chatType === 'peer'
+              ? item._id?.toString() ||
+                item.userid?.toString() ||
+                index.toString()
+              : item.room_id?.toString() || index.toString()
+          }
+          renderItem={chatType === 'peer' ? renderPeerItem : renderGroupItem}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.listContent}
+        />
+      )}
     </View>
-  )
+  );
 };
 
 export default MessageScreen;
-

@@ -5,17 +5,18 @@ import authLoading from '../styles/authLoading.style';
 
 const AuthLoading = ({ navigation }) => {
   useEffect(() => {
-    checkLogin();
-  }, []);
-  const checkLogin = async () => {
-    const token = await AsyncStorage.getItem('token');
+    const checkLogin = async () => {
+      const token = await AsyncStorage.getItem('token');
 
-    if (token) {
-      navigation.replace('Main');
-    } else {
-      navigation.replace('Login');
-    }
-  };
+      if (token) {
+        navigation.replace('Main');
+      } else {
+        navigation.replace('Login');
+      }
+    };
+
+    checkLogin();
+  }, [navigation]);
 
   return (
     <View style={authLoading.container}>

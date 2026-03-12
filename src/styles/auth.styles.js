@@ -82,6 +82,7 @@ passwordContainer: {
 passwordInput: {
   flex: 1,
   height: 48,
+  borderWidth: 0,
 },
 
 successContainer:{
@@ -95,8 +96,6 @@ successText:{
   fontSize:15,
   fontWeight:"bold",
 },
-
-
 
 });
 

@@ -33,6 +33,13 @@ const profileScreenStyle = StyleSheet.create({
     postsContainer:{
         paddingBottom:1000,
     },
+    displayUsername: {
+        color: '#007AFF',
+        marginBottom: 5,
+    },
+    loadingIndicator: {
+        marginTop: 20,
+    },
 });
 
 export default profileScreenStyle;

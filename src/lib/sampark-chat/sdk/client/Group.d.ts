@@ -1,0 +1,30 @@
+import { GroupType } from "../utils/common";
+declare class Group {
+    private guid;
+    private name;
+    private groupType;
+    private password?;
+    private icon?;
+    private description?;
+    private owner?;
+    private createdAt?;
+    private membersCount?;
+    private hasJoined?;
+    constructor(name: string, groupType: GroupType, password?: string, icon?: string, description?: string, guid?: string);
+    getGuid(): string;
+    getName(): string;
+    getType(): GroupType;
+    getPassword(): string | undefined;
+    getIcon(): string | undefined;
+    getDescription(): string | undefined;
+    getOwner(): string | undefined;
+    getCreatedAt(): number | undefined;
+    getMembersCount(): number | undefined;
+    getHasJoined(): boolean | undefined;
+    _setGuid(guid: string): void;
+    _setOwner(owner: string): void;
+    _setCreatedAt(timestamp: number): void;
+    _setMembersCount(count: number): void;
+    _setHasJoined(hasJoined: boolean): void;
+}
+export default Group;

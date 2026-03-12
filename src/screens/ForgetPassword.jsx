@@ -49,7 +49,7 @@ const ForgetPassword = () => {
       }
     } catch (error) {
       console.log('Signup error:', error);
-      alert('Network error');
+      // alert('Network error');
     }
   };
 
@@ -80,7 +80,7 @@ const ForgetPassword = () => {
         {errors.email && <Text style={authStyles.error}>{errors.email}</Text>}
         <View style={forgetPassword.inputContainer}>
           <TextInput
-            style={[forgetPassword.inputBox, { flex: 1, borderWidth: 0 }]}
+            style={[forgetPassword.inputBox, forgetPassword.inputBoxNested]}
             placeholder="Password"
             secureTextEntry={passwordToggle.secure}
             autoCapitalize="none"
@@ -103,7 +103,7 @@ const ForgetPassword = () => {
         )}
         <View style={forgetPassword.inputContainer}>
           <TextInput
-            style={[forgetPassword.inputBox, { flex: 1, borderWidth: 0 }]}
+            style={[forgetPassword.inputBox, forgetPassword.inputBoxNested]}
             placeholder="Confirm Password"
             secureTextEntry={confirmPasswordToggle.secure}
             autoCapitalize="none"

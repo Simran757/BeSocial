@@ -12,6 +12,7 @@ import ForgetPassword from './src/screens/ForgetPassword';
 import EditProfilePage from './src/screens/EditProfilePage';
 import About from './src/screens/About';
 import ProfileScreen from './src/screens/ProfileScreen';
+import ChatScreen from './src/screens/ChatScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -31,6 +32,7 @@ const App = () => {
         <Stack.Screen name= "About" component={About} />  
         <Stack.Screen name= "EditPostPage" component={EditProfilePage} />
         <Stack.Screen name= "ProfileScreen" component={ProfileScreen} />
+        <Stack.Screen name= "ChatScreen" component={ChatScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   </SafeAreaProvider>

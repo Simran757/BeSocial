@@ -1,9 +1,10 @@
-import { nameRegex, emailRegex, passwordRegex } from '../utils/regex';
+import { nameRegex, usernameRegex, emailRegex, passwordRegex } from '../utils/regex';
 import { AUTH_ERRORS } from './authMessages.service';
 
 export const validateSignup = ({
   firstName,
   lastName,
+  username,
   email,
   password,
   confirmPassword,
@@ -15,6 +16,9 @@ export const validateSignup = ({
 
   if (!nameRegex.test(lastName))
     errors.lastName = AUTH_ERRORS.LAST_NAME;
+
+  if (!usernameRegex.test(username))
+    errors.username = AUTH_ERRORS.REQUIRED; // Or a specific USERNAME error
 
   if (!emailRegex.test(email))
     errors.email = AUTH_ERRORS.EMAIL;
@@ -28,8 +32,11 @@ export const validateSignup = ({
   return errors;
 };
 
-export const validateLogin = ({ email, password }) => {
+export const validateLogin = ({ username, email, password }) => {
   let errors = {};
+
+  if (!username)
+    errors.username = AUTH_ERRORS.REQUIRED;
 
   if (!emailRegex.test(email))
     errors.email = AUTH_ERRORS.EMAIL;
